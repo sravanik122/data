@@ -1,31 +1,44 @@
 import streamlit as st
 import requests
 
-# GitHub raw content link (replace with your dataset's raw URL)
-GITHUB_API_URL = "https://api.github.com/repos/Heena-Begum516/data/contents"
+# GitHub API URL for repo contents
+GITHUB_API_URL = "https://api.github.com/repos/sravanik122/data/contents"
 
-st.set_page_config(page_title="Telugu Recipes", page_icon="🍲", layout="wide")
+st.set_page_config(page_title="Telugu & English Recipes", page_icon="🍲", layout="wide")
 
 # Sidebar
-st.sidebar.title("🍲 Telugu Food Recipes")
+st.sidebar.title("🍲 Food Recipes")
 st.sidebar.markdown("Search, view, and download your favorite recipes.")
+
+# Language toggle
+language = st.sidebar.radio("Select Language", ["English", "Telugu"])
 
 # Search box
 search_query = st.sidebar.text_input("🔍 Search for a recipe:")
 
 # Fetch file list from GitHub
 response = requests.get(GITHUB_API_URL)
+if response.status_code != 200:
+    st.error("❌ Failed to fetch data from GitHub.")
+    st.stop()
+
 files = response.json()
 
-# Filter .txt files only
+# Filter only .txt files
 txt_files = [file for file in files if file['name'].endswith(".txt")]
+
+# Filter based on language
+if language == "English":
+    txt_files = [file for file in txt_files if not file['name'].endswith("_te.txt")]
+else:  # Telugu
+    txt_files = [file for file in txt_files if file['name'].endswith("_te.txt")]
 
 # Filter by search query
 if search_query:
     txt_files = [file for file in txt_files if search_query.lower() in file['name'].lower()]
 
 # Main content
-st.title("📖 Telugu Food Recipe Collection")
+st.title(f"📖 {language} Food Recipe Collection")
 
 if txt_files:
     for file in txt_files:
@@ -47,4 +60,5 @@ if txt_files:
             )
         st.markdown("---")
 else:
-    st.warning("No recipes found matching your search.")
+    st.warning(f"No {language} recipes found matching your search.")
+
